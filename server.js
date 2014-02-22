@@ -1,7 +1,22 @@
-#!/bin/env node
-//  OpenShift sample Node application
-var express = require('express');
-var fs      = require('fs');
+#!/usr/bin/env node
+var express     = require('express');
+var fs          = require('fs');
+var kue         = require('kue');
+var jobs        = kue.createQueue();
+var hat         = require('hat');
+var rack        = hat.rack();
+var sharejs     = require('share');
+var livedb      = require('livedb');
+var livedbMongo = require('livedb-mongo');
+var backend     = livedb.client(livedbMongo('localhost:27017/text?auto_reconnect', {
+    safe: false
+}));
+var share       = sharejs.server.createClient({
+    backend: backend
+});
+var browserChannel = require('browserchannel').server;
+var Duplex      = require('stream').Duplex;
+var spawn       = require('child_process').spawn;
 
 
 /**
@@ -95,14 +110,11 @@ var SampleApp = function() {
     self.createRoutes = function() {
         self.routes = { };
 
-        self.routes['/asciimo'] = function(req, res) {
-            var link = "http://i.imgur.com/kmbjB.png";
-            res.send("<html><body><img src='" + link + "'></body></html>");
-        };
-
         self.routes['/'] = function(req, res) {
-            res.setHeader('Content-Type', 'text/html');
-            res.send(self.cache_get('index.html') );
+            var uuid;
+            uuid = rack();
+            res.writeHead(303, {location: '/openide.html#' + uuid});
+            res.send();
         };
     };
 
@@ -113,12 +125,65 @@ var SampleApp = function() {
      */
     self.initializeServer = function() {
         self.createRoutes();
-        self.app = express.createServer();
+        self.app = express();
 
         //  Add handlers for the app (from the routes).
         for (var r in self.routes) {
             self.app.get(r, self.routes[r]);
         }
+
+        self.app.use('/queue', kue.app);
+
+        self.app.use(express.static(sharejs.scriptsDir));
+        self.app.use(browserChannel({
+            webserver: self.app
+        }, function (client) {
+            var stream;
+            stream = new Duplex({
+                objectMode: true
+            });
+            stream._write = function (chunk, encoding, callback) {
+                if (client.state !== 'closed') {
+                    client.send(chunk);
+                }
+                return callback();
+            };
+            stream._read = function() {};
+            stream.headers = client.headers;
+            stream.remoteAddress = stream.address;
+            client.on('message', function(data) {
+                return stream.push(data);
+            });
+            stream.on('error', function (msg) {
+                return client.stop();
+            });
+            client.on('close', function (reason) {
+                stream.emit('close');
+                stream.emit('end');
+                return stream.end();
+            });
+            return share.listen(stream);
+        }));
+
+        self.app.use('/doc', share.rest());
+
+        self.app.use(express.static(__dirname + "/site/"));
+
+        jobs.process('compileAndRun', function (job, done) {
+            var id = job.data.id;
+            var proc;
+
+            fs.writeFileSync('/tmp/' + id + '.cpp', job.data.program);
+
+            proc = spawn('clang++', ['-g', '-O2', '-o', '/tmp/' + id, '/tmp/' + id + '.cpp']);
+            proc.stderr.on('data', function (data) {
+                done(new Error(data));
+            });
+            proc.on('close', function (code) {
+                fs.unlinkSync('/tmp/' + job.data.id + '.cpp');
+            });
+            done();
+        });
     };
 
 
