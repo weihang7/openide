@@ -9,7 +9,7 @@ var jobs        = kue.createQueue({
         auth: process.env.REDIS_PASSWORD
     }
 });
-console.log("port" + port);
+console.log(process.env.OPENSHIFT_REDIS_PORT);
 var hat         = require('hat');
 var rack        = hat.rack();
 var sharejs     = require('share');
