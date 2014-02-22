@@ -9,7 +9,7 @@ var jobs        = kue.createQueue({
         auth: process.env.REDIS_PASSWORD
     }
 });
-console.log("finished jobs");
+console.log("port" + port);
 var hat         = require('hat');
 var rack        = hat.rack();
 var sharejs     = require('share');
@@ -24,13 +24,11 @@ if(process.env.OPENSHIFT_MONGODB_DB_PASSWORD){
     process.env.OPENSHIFT_APP_NAME;
 }
 var backend     = livedb.client(livedbMongo(connection_string, {
-    safe: false
+    safe: true
 }));
-console.log("finished mongo");
 var share       = sharejs.server.createClient({
     backend: backend
 });
-console.log("finished share");
 var browserChannel = require('browserchannel').server;
 var Duplex      = require('stream').Duplex;
 var spawn       = require('child_process').spawn;
