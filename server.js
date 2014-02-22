@@ -2,7 +2,6 @@
 var express     = require('express');
 var fs          = require('fs');
 var kue         = require('kue');
-console.log("creating jobs");
 var jobs        = kue.createQueue({
     redis: {
         port: process.env.OPENSHIFT_REDIS_PORT,
@@ -10,7 +9,7 @@ var jobs        = kue.createQueue({
         auth: process.env.REDIS_PASSWORD
     }
 });
-console.log("done");
+console.log("finished jobs");
 var hat         = require('hat');
 var rack        = hat.rack();
 var sharejs     = require('share');
@@ -27,9 +26,11 @@ if(process.env.OPENSHIFT_MONGODB_DB_PASSWORD){
 var backend     = livedb.client(livedbMongo(connection_string, {
     safe: false
 }));
+console.log("finished mongo");
 var share       = sharejs.server.createClient({
     backend: backend
 });
+console.log("finished share");
 var browserChannel = require('browserchannel').server;
 var Duplex      = require('stream').Duplex;
 var spawn       = require('child_process').spawn;
