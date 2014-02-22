@@ -2,7 +2,13 @@
 var express     = require('express');
 var fs          = require('fs');
 var kue         = require('kue');
-var jobs        = kue.createQueue();
+var jobs        = kue.createQueue({
+    redis: {
+        port: process.env.OPENSHIFT_REDIS_PORT,
+        host: process.env.OPENSHIFT_REDIS_HOST,
+        auth: process.env.REDIS_PASSWORD
+    }
+});
 var hat         = require('hat');
 var rack        = hat.rack();
 var sharejs     = require('share');
