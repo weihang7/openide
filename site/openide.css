@@ -37,7 +37,6 @@ body {
   -webkit-appearance: button;
   cursor: pointer;
   border: none;
-  -webkit-font-smoothing: subpixel-antialiased;
 }
 .blue_btn {
   display: block;
@@ -57,7 +56,6 @@ body {
   vertical-align: middle;
   cursor: pointer;
   border: none;
-  -webkit-font-smoothing: subpixel-antialiased;
   outline: none;
   text-decoration: none;
   white-space: normal;
@@ -113,24 +111,6 @@ body {
 }
 #output_wrapper {
   overflow: auto;
-}
-#upper_right {
-  /*
-  position: absolute;
-  top: 0;
-  left: 20px;
-  right: 20px;
-  height: 243px;
-  */
-}
-#lower_right {
-  /*
-  position: absolute;
-  top: 243px;
-  left: 20px;
-  bottom: 0;
-  right: 20px;
-  */
 }
 #output {
   overflow: auto;
