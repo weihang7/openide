@@ -221,7 +221,7 @@ if (cluster.isMaster) {
             done(new Error(stderr));
           } else {
             var run_proc;
-            run_proc = execFile('./run', [name], function (error, stdout, stderr) {
+            run_proc = execFile('./run', [name], {timeout: 1500}, function (error, stdout, stderr) {
               if (error) {
                 throw new Error(error);
               }
