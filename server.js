@@ -155,19 +155,10 @@ if (cluster.isMaster) {
       if (!err) {
         self.app.get('/check', function(req, res) {
           db.collection('outputs', function (err, collection) {
-            collection.find({
+            collection.findAndRemove({
               id: req.query.id
-            }).toArray(function(err, docs) {
-              var output = "", i;
-              for (i = 0; i < docs.length; i++) {
-                output += docs[i].output;
-              }
-              res.send(output);
-              collection.remove({
-                id: req.query.id
-              }, function (err, num) {
-                if (err) throw new Error(err);
-              });
+            }, function(err, item) {
+              res.send(item.output);
             });
           });
         });
