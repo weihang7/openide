@@ -235,4 +235,3 @@ var App = function() {
 var zapp = new App();
 zapp.initialize();
 zapp.start();
-

@@ -2,8 +2,10 @@ $(function () {
   "use strict";
   var editor = ace.edit("editor"), textarea = $("#program"), form = $("#form"), editor_el = $("#editor"), submit_button = $("#submit"), output = $("#output"), timemem = $("#time_mem"), share = $("#share"), file = $("#file"), file_tip = $("#file_tip"), id, address = $("#url"), cover = $("#cover"), dialog = $("#dialog"),s = new BCSocket(null, {reconnect: true}), conn = new sharejs.Connection(s), doc, jobid, gotten = false, body = $("body");
   editor.getSession().setMode("ace/mode/c_cpp");
+  // Get the ID of the document from the location hash
   id = location.hash.slice(1);
   if (!id) {
+    // If there is no ID, let the server give the user an ID.
     location.href = '/';
   }
   editor.focus();

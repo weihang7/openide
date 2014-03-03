@@ -1,11 +1,12 @@
 {
   "name": "openide",
-  "version": "1.0.0",
-  "description": "Online IDE",
-  "keywords": [
-    "Node.js",
-    "application"
-  ],
+  "version": "0.0.0",
+  "description": "An open source online IDE.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
   "author": {
     "name": "Weihang Fan",
     "email": "weihangf@gmail.com"
@@ -31,6 +32,14 @@
   },
   "devDependencies": {},
   "bundleDependencies": [],
-  "private": true,
+  "private": false,
   "main": "server.js"
+  "license": "AGPL",
+  "devDependencies": {
+    "grunt": "0.4.2",
+    "grunt-contrib-uglify": "0.2.7",
+    "grunt-contrib-jshint": "0.8.0",
+    "grunt-contrib-watch": "0.5.3",
+    "grunt-contrib-concat": "0.3.0"
+  }
 }

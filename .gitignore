@@ -13,5 +13,5 @@ logs
 results
 build
 .grunt
-
+npm-debug.log
 node_modules
