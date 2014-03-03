@@ -15,6 +15,7 @@ $(function () {
   doc.whenReady(function () {
     body.removeClass("wait");
     editor.setReadOnly(false);
+    $("#loading").remove();
     editor.getSession().setMode("ace/mode/c_cpp");
     editor.focus();
     if (!doc.type) {
