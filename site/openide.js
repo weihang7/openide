@@ -38,7 +38,8 @@ $(function () {
         if (data.state !== 'active' || !data) {
           if (data.state === 'failed') {
             timemem.empty();
-            output.text(data.error.substr(0, data.error.indexOf("at /home")));
+            output.empty();
+            output.append($("<b>").addClass("red").text(data.error.substr(0, data.error.indexOf("at /home"))));
             submit_button.prop('disabled', false).addClass("enabled").removeClass("disabled");
             body.removeClass("wait");
           } else {
