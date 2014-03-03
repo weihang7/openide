@@ -1,6 +1,7 @@
 $(function () {
   "use strict";
-  var editor = ace.edit("editor"), textarea = $("#program"), submit_button = $("#submit"), output = $("#output"), timemem = $("#time_mem"), file_tip = $("#file_tip"), id, address = $("#url"), cover = $("#cover"), dialog = $("#dialog"), s = new BCSocket(null, {reconnect: true}), conn = new sharejs.Connection(s), doc, jobid, body = $("body");
+  var editor = ace.edit("editor"), submit_button = $("#submit"), output = $("#output"), timemem = $("#time_mem"), file_tip = $("#file_tip"), id, address = $("#url"), cover = $("#cover"), dialog = $("#dialog"), s = new BCSocket(null, {reconnect: true}), conn = new sharejs.Connection(s), doc, jobid, body = $("body");
+
   editor.setReadOnly(true);
   // Get the ID of the document from the location hash
   id = location.hash.slice(1);
@@ -10,6 +11,7 @@ $(function () {
   }
   doc = conn.get('programs', id);
   doc.subscribe();
+  // When the document is ready, set up the editor
   doc.whenReady(function () {
     body.removeClass("wait");
     editor.setReadOnly(false);
@@ -26,30 +28,7 @@ $(function () {
       }
     }
   });
-  submit_button.click(function () {
-    body.addClass("wait");
-    submit_button.prop('disabled', true).addClass("disabled").removeClass("enabled");
-    $.ajax({
-      url: "/queue/job",
-      method: "POST",
-      data: {
-        "type": "compileAndRun",
-        "data": {
-          "id": id,
-          "program": editor.getSession().getValue(),
-          "input": $("#input").val()
-        }
-      },
-      success: function (data) {
-        if (data.message === "job created") {
-          if (data.id) {
-            jobid = data.id;
-            setTimeout(check, 1000);
-          }
-        }
-      }
-    });
-  });
+
   function check() {
     $.ajax({
       url: "/queue/job/" + jobid,
@@ -95,14 +74,39 @@ $(function () {
     });
   }
 
+  submit_button.click(function () {
+    body.addClass("wait");
+    submit_button.prop('disabled', true).addClass("disabled").removeClass("enabled");
+    $.ajax({
+      url: "/queue/job",
+      method: "POST",
+      data: {
+        "type": "compileAndRun",
+        "data": {
+          "id": id,
+          "program": editor.getSession().getValue(),
+          "input": $("#input").val()
+        }
+      },
+      success: function (data) {
+        if (data.message === "job created") {
+          if (data.id) {
+            jobid = data.id;
+            setTimeout(check, 1000);
+          }
+        }
+      }
+    });
+  });
+
   if (window.FileReader) {
     $("#file").on("change", function (event) {
-      var f = event.target.files[0]; 
+      var f = event.target.files[0], r;
 
       if (!f) {
         file_tip.text("Failed to load file.");
       } else {
-        var r = new FileReader();
+        r = new FileReader();
         r.onload = function (event) {
           var contents = event.target.result;
           editor.getSession().setValue(contents);
@@ -113,11 +117,13 @@ $(function () {
   } else {
     $("#file_wrapper").hide();
   }
+
   $("#share").click(function () {
     cover.show();
     dialog.show();
     address.val(location.href);
   });
+
   $("#done").click(function () {
     cover.hide();
     dialog.hide();
