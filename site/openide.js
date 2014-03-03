@@ -1,6 +1,6 @@
 $(function () {
   "use strict";
-  var editor = ace.edit("editor"), submit_button = $("#submit"), output = $("#output"), timemem = $("#time_mem"), file_tip = $("#file_tip"), id, address = $("#url"), cover = $("#cover"), dialog = $("#dialog"), s = new BCSocket(null, {reconnect: true}), conn = new sharejs.Connection(s), doc, jobid, body = $("body");
+  var editor = ace.edit("editor"), submit_button = $("#submit"), output = $("#output"), timemem = $("#time_mem"), file_tip = $("#file_tip"), id, address = $("#url"), cover = $("#cover"), dialog = $("#dialog"), s = new BCSocket(null, {reconnect: true}), conn = new sharejs.Connection(s), doc, jobid, body = $("body"), input_doc, input = $("#input");
 
   editor.setReadOnly(true);
   // Get the ID of the document from the location hash
@@ -30,16 +30,30 @@ $(function () {
     }
   });
 
+  // Also have a document for the input
+  input_doc = conn.get('programs', id + "_input");
+  input_doc.subscribe();
+  input_doc.whenReady(function () {
+    if (!input_doc.type) {
+      input_doc.create('text');
+    }
+    if (input_doc.type && input_doc.type.name === 'text') {
+      input_doc.attachTextarea(input[0]);
+    }
+  });
   function check() {
     $.ajax({
       url: "/queue/job/" + jobid,
       method: "GET",
       success: function (data) {
+        var processed;
         if (data.state !== 'active' || !data) {
           if (data.state === 'failed') {
             timemem.empty();
             output.empty();
-            output.append($("<b>").addClass("red").text(data.error.substr(0, data.error.indexOf("at /home"))));
+            // The actual error ends 6 characters before the at /home
+            processed = data.error.substr(0, data.error.indexOf("at /home") - 6);
+            output.append($("<b>").addClass("red").text(processed));
             submit_button.prop('disabled', false).addClass("enabled").removeClass("disabled");
             body.removeClass("wait");
           } else {
@@ -87,7 +101,7 @@ $(function () {
         "data": {
           "id": id,
           "program": editor.getSession().getValue(),
-          "input": $("#input").val()
+          "input": input.val()
         }
       },
       success: function (data) {
