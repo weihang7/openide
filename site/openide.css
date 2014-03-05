@@ -11,7 +11,6 @@ body {
 }
 #right {
   position: absolute;
-  color: #666;
   vertical-align: top;
   top: 0; left: 50%; right: 0; bottom: 0;
   padding-left: 10px;
@@ -173,4 +172,32 @@ body.wait, body.wait *{
   left: 25%;
   margin-top: -8px;
   margin-left: -8px;
+}
+#prev {
+  text-decoration: none;
+  float: right;
+}
+#prev:visited {
+  color: blue;
+}
+#prev_header {
+  font-size: 25px;
+}
+#prev_dialog {
+  display: none;
+  position: absolute;
+  background-color: #fff;
+  right: 0;
+  top: 0;
+  width: 300px;
+  margin-left: -150px;
+  padding-top: 20px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+  padding-right: 35px;
+  z-index: 10;
+  -webkit-box-shadow: 0 4px 16px rgba(0,0,0,.2);
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+  border: 1px solid rgba(0,0,0,.333);
+  outline: 0;
 }

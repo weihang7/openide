@@ -4,20 +4,10 @@ var fs          = require('fs');
 var cluster     = require('cluster');
 var numCPUs     = require('os').cpus().length;
 var kue         = require('kue');
+var Job         = kue.Job;
 var jobs        = kue.createQueue();
 var hat         = require('hat');
 var rack        = hat.rack();
-var sharejs     = require('share');
-var livedb      = require('livedb');
-var livedbMongo = require('livedb-mongo');
-var backend     = livedb.client(livedbMongo('127.0.0.1:27017/app', {
-  safe: true
-}));
-var share       = sharejs.server.createClient({
-  backend: backend
-});
-var browserChannel = require('browserchannel').server;
-var Duplex      = require('stream').Duplex;
 var exec        = require('child_process').exec;
 var execFile    = require('child_process').execFile;
 var mongoclient = require('mongodb').MongoClient;
@@ -91,11 +81,24 @@ if (cluster.isMaster) {
   self.createRoutes = function() {
     self.routes = {};
 
-    self.routes['/'] = function(req, res) {
-      var uuid;
-      uuid = rack();
-      res.writeHead(303, {location: '/openide.html#' + uuid});
-      res.send();
+    self.routes['/enqueue'] = function(req, res) {
+      var job = jobs.create('compileAndRun', {
+        id: req.body.data.id,
+        input: req.body.data.input,
+        program: req.body.data.program
+      });
+      job.save(function () {
+        res.send({
+          id: job.id
+        });
+      });
+    };
+
+    self.routes['/get'] = function (req, res) {
+      Job.get(req.query.id, function (err, job) {
+        if (err) return;
+        res.send(JSON.stringify(job));
+      });
     };
   };
 
@@ -108,57 +111,82 @@ if (cluster.isMaster) {
     self.createRoutes();
     self.app = express();
 
-    //  Add handlers for the app (from the routes).
-    for (var r in self.routes) {
-      self.app.get(r, self.routes[r]);
-    }
-
-    self.app.use('/queue', kue.app);
+    self.app.use(express.json());       // to support JSON-encoded bodies
+    self.app.use(express.urlencoded()); // to support URL-encoded bodies
     self.app.use(express.compress());
 
-    self.app.use(express.static(sharejs.scriptsDir));
-    self.app.use(browserChannel({
-      webserver: self.app
-    }, function (client) {
-      var stream;
-      stream = new Duplex({
-        objectMode: true
-      });
-      stream._write = function (chunk, encoding, callback) {
-        if (client.state !== 'closed') {
-          client.send(chunk);
-        }
-        return callback();
-      };
-      stream._read = function() {};
-      stream.headers = client.headers;
-      stream.remoteAddress = stream.address;
-      client.on('message', function(data) {
-        return stream.push(data);
-      });
-      stream.on('error', function (msg) {
-        return client.stop();
-      });
-      client.on('close', function (reason) {
-        stream.emit('close');
-        stream.emit('end');
-        return stream.end();
-      });
-      return share.listen(stream);
-    }));
-
-    self.app.use('/doc', share.rest());
+    //  Add handlers for the app (from the routes).
+    for (var r in self.routes) {
+      self.app.all(r, self.routes[r]);
+    }
 
     self.app.use(express.static(__dirname + "/site/"));
 
-    mongoclient.connect('mongodb://localhost:27017/outputs', function (err, db) {
+    mongoclient.connect('mongodb://localhost:27017/openide', function (err, db) {
       if (!err) {
+
+        self.app.get('/', function(req, res) {
+          var uuid, doc;
+          uuid = rack();
+          doc = {
+            id: uuid,
+            input: '',
+            program: '',
+            previous: [],
+            time: (new Date()).getTime()
+          };
+          db.collection('programs', function (err, collection) {
+            collection.insert(doc, {w:1}, function (err, result) {
+              res.writeHead(303, {location: '/openide.html?' + uuid});
+              res.send();
+            });
+          });
+        });
+
         self.app.get('/check', function(req, res) {
           db.collection('outputs', function (err, collection) {
             collection.findAndRemove({
               id: req.query.id
             }, function(err, item) {
-              res.send(item.output);
+              if (err) {
+                throw new Error(err);
+              }
+              if (item) {
+                res.send(item.output);
+              }
+            });
+          });
+        });
+
+        self.app.get('/get_doc', function (req, res) {
+          db.collection('programs', function (err, collection) {
+            collection.findOne({
+              id: req.query.id
+            }, function (err, item) {
+              res.send(item)
+            });
+          });
+        });
+
+        self.app.post('/save', function (req, res) {
+          db.collection('programs', function (err, collection) {
+            var new_id = rack();
+            collection.findOne({
+              id: req.body.id
+            }, function (err, item) {
+              var orig_prev = item.previous || [];
+              orig_prev.push(req.body.id);
+              collection.insert({
+                id: new_id,
+                input: req.body.input,
+                program: req.body.program,
+                previous: orig_prev,
+                time: (new Date()).getTime()
+              }, {w:1}, function (err, result) {
+                res.send({
+                  id: new_id
+                });
+              });
             });
           });
         });
@@ -198,7 +226,7 @@ if (cluster.isMaster) {
   zapp.initialize();
   zapp.start();
 } else {
-  mongoclient.connect('mongodb://localhost:27017/outputs', function (err, db) {
+  mongoclient.connect('mongodb://localhost:27017/openide', function (err, db) {
     if (!err) {
       jobs.process('compileAndRun', function (job, done) {
         var id = job.data.id;
