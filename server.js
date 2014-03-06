@@ -126,21 +126,10 @@ if (cluster.isMaster) {
       if (!err) {
 
         self.app.get('/', function(req, res) {
-          var uuid, doc;
+          var uuid;
           uuid = rack();
-          doc = {
-            id: uuid,
-            input: '',
-            program: '',
-            previous: [],
-            time: (new Date()).getTime()
-          };
-          db.collection('programs', function (err, collection) {
-            collection.insert(doc, {w:1}, function (err, result) {
-              res.writeHead(303, {location: '/openide.html?' + uuid});
-              res.send();
-            });
-          });
+          res.writeHead(303, {location: '/openide.html?' + uuid});
+          res.send();
         });
 
         self.app.get('/check', function(req, res) {
@@ -170,12 +159,19 @@ if (cluster.isMaster) {
 
         self.app.post('/save', function (req, res) {
           db.collection('programs', function (err, collection) {
-            var new_id = rack();
             collection.findOne({
               id: req.body.id
             }, function (err, item) {
-              var orig_prev = item.previous || [];
-              orig_prev.push(req.body.id);
+              var orig_prev = [], new_id = rack();
+              if (item) {
+                orig_prev = item.previous;
+                orig_prev.push({
+                  id: req.body.id,
+                  time: item.time
+                });
+              } else {
+                new_id = req.body.id;
+              }
               collection.insert({
                 id: new_id,
                 input: req.body.input,

@@ -1,9 +1,9 @@
 $(function () {
   "use strict";
-  var editor = ace.edit("editor"), submit_button = $("#submit"), output = $("#output"), timemem = $("#time_mem"), file_tip = $("#file_tip"), id, address = $("#url"), cover = $("#cover"), dialog = $("#dialog"), jobid, body = $("body"), input = $("#input"), input_file_tip = $("#input_file_tip"), orig_doc, orig_input, header = $("#header"), prev_dialog = $("#prev_dialog"), history, prev_wrapper = $("#prev_items_wrapper");
+  var editor = ace.edit("editor"), submit_button = $("#submit"), output = $("#output"), timemem = $("#time_mem"), file_tip = $("#file_tip"), id, address = $("#url"), cover = $("#cover"), dialog = $("#dialog"), jobid, body = $("body"), input = $("#input"), input_file_tip = $("#input_file_tip"), orig_doc = "", orig_input = "", header = $("#header"), prev_dialog = $("#prev_dialog"), history = [], prev_wrapper = $("#prev_items_wrapper"), mark;
 
   editor.setReadOnly(true);
-  // Get the ID of the document from the location hash
+  // Get the ID of the document from the location query string
   id = location.search.slice(1);
   if (!id) {
     // If there is no ID, let the server give the user an ID.
@@ -16,10 +16,12 @@ $(function () {
         id: id
       },
       success: function (data) {
-        // Store the original values so that we can check whether they changed later
-        orig_doc = data.program;
-        orig_input = data.input;
-        history = data.previous;
+        if (data) {
+          // Store the original values so that we can check whether they changed later
+          orig_doc = data.program;
+          orig_input = data.input;
+          history = data.previous;
+        }
 
         // We are no longer loading
         body.removeClass("wait");
@@ -46,6 +48,17 @@ $(function () {
           editor.getSession().setValue(orig_doc);
           input.val(orig_input);
         }
+
+        editor.getSession().on('change', function () {
+          mark = "Your document has unsaved changes.";
+          $("#save").prop("disabled", false).removeClass("disabled");
+        });
+
+        input.on('keyup paste cut', function () {
+          mark = "Your document has unsaved changes.";
+          $("#save").prop("disabled", false).removeClass("disabled");
+        });
+
         editor.focus();
       }
     });
@@ -88,7 +101,7 @@ $(function () {
                   output.append($("<b>").addClass("red").text(lines[0]));
                   timemem.html(lines[2] + "<br>" + lines[3]);
                 } else if (lines[0].length === 0) {
-                  output.text("Your program outputted nothing.");
+                  output.text("Standard output is empty");
                   timemem.html(lines[1] + "<br>" + lines[2]);
                 } else {
                   output.text(data.substr(0, tmidx));
@@ -164,7 +177,7 @@ $(function () {
     $("#file_wrapper").hide();
   }
 
-  $("#share").click(function () {
+  $("#save").click(function () {
     if (editor.getSession().getValue() !== orig_doc || input.val() !== orig_input) {
       $.ajax({
         url: "/save",
@@ -175,11 +188,23 @@ $(function () {
           input: input.val()
         },
         success: function (data) {
+          mark = undefined;
           location.search = "?" + data.id;
-          address.val(location.protocol + "//" + location.host + location.pathname + "?" + data.id);
+          $("#save").prop("disabled", true).addClass("disabled");
         }
       });
     }
+  });
+
+  $("#share").click(function () {
+    address.val(location.href);
+    cover.show();
+    dialog.show();
+  });
+
+  $("#done").click(function () {
+    dialog.hide();
+    cover.hide();
   });
 
   $("#prev").click(function () {
@@ -187,7 +212,7 @@ $(function () {
     cover.show();
     prev_wrapper.empty();
     for (i = 0; i < history.length; i++) {
-      prev_wrapper.append($("<div>").append($("<a>").prop('href', location.protocol + "//" + location.host + location.pathname + "?" + history[i]).text(history[i])));
+      prev_wrapper.append($("<div>").append($("<a>").prop('href', location.protocol + "//" + location.host + location.pathname + "?" + history[i].id).text(history[i].id)).append($("<div>").addClass("time").text($.timeago(new Date()))));
     }
     prev_dialog.show();
   });
@@ -195,5 +220,9 @@ $(function () {
   $("#prev_done").click(function () {
     cover.hide();
     prev_dialog.hide();
+  });
+
+  $(window).on('beforeunload', function () {
+    return mark;
   });
 });

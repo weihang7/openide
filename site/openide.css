@@ -1,5 +1,6 @@
 body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #555;
   margin: 0;
   height: 100%;
 }
@@ -153,7 +154,6 @@ body {
 }
 #url {
   width: 100%;
-  color: #555;
   border: 1px solid #d9d9d9;
   border-top: 1px solid #c0c0c0;
   font-size: 13px;
@@ -181,7 +181,7 @@ body.wait, body.wait *{
   color: blue;
 }
 #prev_header {
-  font-size: 25px;
+  font-size: 20px;
 }
 #prev_dialog {
   display: none;
@@ -200,4 +200,17 @@ body.wait, body.wait *{
   box-shadow: 0 4px 16px rgba(0,0,0,.2);
   border: 1px solid rgba(0,0,0,.333);
   outline: 0;
+}
+pre {
+  font-family: monospace;
+}
+.time {
+  color: #999;
+}
+#save {
+  margin-left: auto;
+  margin-right: 20px;
+}
+#share {
+  margin-left: auto;
 }
