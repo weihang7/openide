@@ -63,8 +63,8 @@ int main(int argc, char** argv) {
     double t = 0.0;
     t += 1.0 * u.ru_utime.tv_sec + u.ru_utime.tv_usec / 1000000.0;
     t += 1.0 * u.ru_stime.tv_sec + u.ru_stime.tv_usec / 1000000.0;
-    printf("\nTime used: %fs\n", t);
-    printf("Memory used: %ldKB", u.ru_maxrss);
+    printf("\ntime used: %fs\n", t);
+    printf("memory used: %ldKB", u.ru_maxrss);
   }
   return 0;
 }

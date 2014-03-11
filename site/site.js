@@ -27,7 +27,6 @@ $(function () {
         body.removeClass("wait");
         editor.setReadOnly(false);
         $("#loading").remove();
-        submit_button.prop('disabled', false).addClass("enabled").removeClass("disabled");
 
         editor.getSession().setMode("ace/mode/c_cpp");
         if (orig_doc.length === 0) {
@@ -49,19 +48,18 @@ $(function () {
           input.val(orig_input);
         }
 
-        editor.getSession().on('change', function () {
-          mark = "Your document has unsaved changes.";
-          $("#save").prop("disabled", false).removeClass("disabled");
-        });
+        editor.getSession().on('change', activateSave);
 
-        input.on('keyup paste cut', function () {
-          mark = "Your document has unsaved changes.";
-          $("#save").prop("disabled", false).removeClass("disabled");
-        });
+        input.on('keyup paste cut', activateSave);
 
         editor.focus();
       }
     });
+  }
+
+  function activateSave() {
+    mark = "Your document has unsaved changes.";
+    $("#save").prop("disabled", false).removeClass("disabled");
   }
 
   function check() {
@@ -81,7 +79,6 @@ $(function () {
             // The actual error ends 6 characters before the at /home
             processed = data.error.substr(0, data.error.indexOf("at /home") - 6);
             output.append($("<b>").addClass("red").text(processed));
-            submit_button.prop('disabled', false).addClass("enabled").removeClass("disabled");
             body.removeClass("wait");
           } else {
             $.ajax({
@@ -91,7 +88,7 @@ $(function () {
                 "id": jobid
               },
               success: function (data) {
-                var lines = data.split("\n"), tmidx = data.indexOf("Time used");
+                var lines = data.split("\n"), tmidx = data.indexOf("time used");
                 submit_button.prop('disabled', false).addClass("enabled").removeClass("disabled");
                 body.removeClass("wait");
                 if (tmidx === -1) {
@@ -157,6 +154,7 @@ $(function () {
           editor.getSession().setValue(contents);
         };
         r.readAsText(f);
+        activateSave();
       }
     });
     $("#input_file").on("change", function (event) {
@@ -171,6 +169,7 @@ $(function () {
           input.val(contents);
         };
         r.readAsText(f);
+        activateSave();
       }
     });
   } else {

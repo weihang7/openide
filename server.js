@@ -238,7 +238,7 @@ if (cluster.isMaster) {
             var run_proc;
             run_proc = execFile('./run', [name], {timeout: 1500}, function (error, stdout, stderr) {
               if (error) {
-                throw new Error(error);
+                done(new Error(error));
               }
               db.collection('outputs', function (err, collection) {
                 var doc = {

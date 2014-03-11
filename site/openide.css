@@ -63,10 +63,10 @@ body {
   user-select: none;
   box-sizing: border-box;
 }
-.blue_btn:hover {
+.blue_btn_enabled:hover {
   background-color: #5dade2;
 }
-.blue_btn:active {
+.blue_btn_enabled:active {
   background-color: #2c81ba;
   border-color: #2c81ba;
   -webkit-box-shadow: none;
@@ -91,7 +91,6 @@ body {
 .disabled {
   color: rgba(255, 255, 255, 0.75);
   background-color: #bdc3c7;
-  opacity: 0.7;
   pointer-events: none;
   cursor: not-allowed;
 }
@@ -103,7 +102,7 @@ body {
   word-wrap: break-word;       /* Internet Explorer 5.5+ */
   padding: 10px;
 }
-#output:not(:empty) {
+.not_empty {
   border: 1px solid #aaa;
 }
 #output_label {
@@ -128,6 +127,8 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
+  -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+  filter: alpha(opacity=50);
   opacity: 0.5;
   z-index: 5;
   background-color: #888;
@@ -138,10 +139,10 @@ body {
   background-color: #fff;
   top: 50%;
   left: 50%;
-  height: 100px;
-  width: 600px;
-  margin-top: -80px;
-  margin-left: -300px;
+  height: 142px;
+  width: 500px;
+  margin-top: -101px;
+  margin-left: -250px;
   padding-top: 20px;
   padding-bottom: 10px;
   padding-left: 20px;
@@ -157,8 +158,7 @@ body {
   border: 1px solid #d9d9d9;
   border-top: 1px solid #c0c0c0;
   font-size: 13px;
-  height: 25px;
-  padding: 1px 8px;
+  padding: 6px 8px;
 }
 #done {
   float: none;
@@ -175,6 +175,7 @@ body.wait, body.wait *{
 }
 #prev {
   text-decoration: none;
+  outline: none;
   float: right;
 }
 #prev:visited {
@@ -213,4 +214,7 @@ pre {
 }
 #share {
   margin-left: auto;
+}
+#sharing {
+  margin-top: 10px;
 }

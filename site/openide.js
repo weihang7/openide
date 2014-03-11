@@ -49,19 +49,18 @@ $(function () {
           input.val(orig_input);
         }
 
-        editor.getSession().on('change', function () {
-          mark = "Your document has unsaved changes.";
-          $("#save").prop("disabled", false).removeClass("disabled");
-        });
+        editor.getSession().on('change', activateSave);
 
-        input.on('keyup paste cut', function () {
-          mark = "Your document has unsaved changes.";
-          $("#save").prop("disabled", false).removeClass("disabled");
-        });
+        input.on('keyup paste cut', activateSave);
 
         editor.focus();
       }
     });
+  }
+
+  function activateSave() {
+    mark = "Your document has unsaved changes.";
+    $("#save").prop("disabled", false).removeClass("disabled").addClass("blue_btn_enabled");
   }
 
   function check() {
@@ -80,7 +79,7 @@ $(function () {
             output.empty();
             // The actual error ends 6 characters before the at /home
             processed = data.error.substr(0, data.error.indexOf("at /home") - 6);
-            output.append($("<b>").addClass("red").text(processed));
+            output.append($("<b>").addClass("red").text(processed)).addClass("not_empty");
             submit_button.prop('disabled', false).addClass("enabled").removeClass("disabled");
             body.removeClass("wait");
           } else {
@@ -91,7 +90,7 @@ $(function () {
                 "id": jobid
               },
               success: function (data) {
-                var lines = data.split("\n"), tmidx = data.indexOf("Time used");
+                var lines = data.split("\n"), tmidx = data.indexOf("time used");
                 submit_button.prop('disabled', false).addClass("enabled").removeClass("disabled");
                 body.removeClass("wait");
                 if (tmidx === -1) {
@@ -107,6 +106,7 @@ $(function () {
                   output.text(data.substr(0, tmidx));
                   timemem.html(data.substr(tmidx).replace(/\n/g, "<br>"));
                 }
+                output.addClass("not_empty");
               }
             });
           }
@@ -157,6 +157,7 @@ $(function () {
           editor.getSession().setValue(contents);
         };
         r.readAsText(f);
+        activateSave();
       }
     });
     $("#input_file").on("change", function (event) {
@@ -171,10 +172,12 @@ $(function () {
           input.val(contents);
         };
         r.readAsText(f);
+        activateSave();
       }
     });
   } else {
     $("#file_wrapper").hide();
+    $("#input_wrapper").hide();
   }
 
   $("#save").click(function () {
